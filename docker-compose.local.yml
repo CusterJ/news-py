@@ -1,0 +1,39 @@
+version: '3'
+
+# docker-compose -f docker-compose.local.yml up -d
+
+services:
+  mongo:
+    image: mongo
+    restart: always
+    volumes:
+      - mongodb_data:/data/db
+    ports:
+      - "27017:27017"
+
+  mongo-express:
+    image: mongo-express
+    restart: always
+    ports:
+      - 8081:8081 
+    depends_on:
+      - mongo
+      - es01
+      
+  es01:
+    image: elasticsearch:8.5.2
+    ports:
+      - 9200:9200
+    restart: always
+    environment:
+      - discovery.type=single-node
+      - ES_JAVA_OPTS=-Xms1g
+      - xpack.security.enabled=false
+    mem_limit: 1073741824
+    volumes:
+      - es_data:/usr/share/elasticsearch/data
+
+volumes:
+  mongodb_data:
+  es_data:
+    driver: local

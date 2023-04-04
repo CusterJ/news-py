@@ -1,0 +1,16 @@
+{% if pagination %}
+<hr>
+<div class="pagination">
+    {% for page in pagination.get("pages") %}
+        {% if page == pagination.get("current") %}
+    <div class="page cpage"><a id="page-link" href="?page={{ page }}" class="page">
+        {{ page }}
+    </a></div>
+        {% else %}
+    <div class="page"><a id="page-link" href="?page={{ page }}" class="page">
+        {{ page }}
+    </a></div>
+       {% end %}
+    {% end %}
+</div>
+{% end %}

@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+  {% include "partials/head.html" %}
+<body>
+    {% include "partials/header.html" %}
+    <div class="container">
+    {% if edit %}
+    <div class="editarticle">
+    <form method="POST" action="?edit=false">     
+        <label>Title</label><input name="title" type="text" required value="{{ art.title }}" />
+        <label>Description</label><textarea name="description" type="text" value="">{{ art.description }}</textarea>
+        <input type="hidden" id="posted" name="posted" value="{{ art.date }}"> 
+        <input type="hidden" id="url" name="url" value="{{ art.url }}"> 
+        <input class="savearticle" type="submit" value="SAVE ARTICLE" />
+    </form>
+    </div>
+    {% else %}
+    {% autoescape None %}
+    <h1>{{ art.title }}<a href="?edit=true"><button class="btn edit" role="button"></button></a></h1>
+    <h2 class="articledate">{{ date }}</h2>
+    <div class="articlecontent">
+        {{ art.description }}
+    </div>
+    {% end %}
+    </div>
+    {% include "partials/footer.html" %}
+</body>
+</html>

@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+  {% include "partials/head.html" %}
+<body>
+  {% include "partials/header.html" %}
+  <div class="container">
+    <h1>{{ title }}</h1>
+      {% if total > 0 %}
+      <h2 class="h2results">Results:{{ total }}</h2>
+      {% end %}
+    <ul>
+    {% if len(arts)> 0 %}
+        {% for art in arts %}
+        {% autoescape None %}
+        <li class="articlelist"><a class="article" href="/article/{{ art["_source"]["id"] }}">{{ art.get("_source").get("title").get("short") }}</a></li>
+        {% end %}
+    {% else %}
+        <h2>No results found</h2>
+    {% end %}
+    </ul>
+  {% include "partials/pagination.html" %}
+  </div>
+  {% include "partials/footer.html" %}
+  <script>
+    function addQueryParameterToLinks(name) {
+      const urlParams = new URLSearchParams(window.location.search);
+      const queryValue = urlParams.get(name);
+      const pageLinks = document.querySelectorAll('.page a');
+      if (queryValue) {
+        pageLinks.forEach((link) => {
+          link.href = `${link.href}&${name}=${queryValue}`;
+        });
+      }
+    }
+    addQueryParameterToLinks('query');
+    </script>
+</body>
+</html>

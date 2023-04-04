@@ -1,0 +1,31 @@
+FROM python:slim-bullseye
+
+COPY . /app
+
+RUN apt-get update && \
+    apt-get install -y supervisor && \
+    pip install -r /app/requirements.txt && \
+    mkdir -p /var/log/supervisor
+
+RUN echo "[supervisord]" > /etc/supervisor/supervisord.conf && \
+    echo "nodaemon=true" >> /etc/supervisor/supervisord.conf && \
+    echo "" >> /etc/supervisor/supervisord.conf && \
+    echo "[program:app]" >> /etc/supervisor/supervisord.conf && \
+    echo "command=python /app/app.py" >> /etc/supervisor/supervisord.conf && \
+    echo "directory=/app" >> /etc/supervisor/supervisord.conf && \
+    echo "autostart=true" >> /etc/supervisor/supervisord.conf && \
+    echo "autorestart=true" >> /etc/supervisor/supervisord.conf && \
+    echo "stdout_logfile=/var/log/supervisor/app.log" >> /etc/supervisor/supervisord.conf && \
+    echo "stderr_logfile=/var/log/supervisor/app.err.log" >> /etc/supervisor/supervisord.conf && \
+    echo "" >> /etc/supervisor/supervisord.conf && \
+    echo "[program:worker]" >> /etc/supervisor/supervisord.conf && \
+    echo "command=python /app/worker.py" >> /etc/supervisor/supervisord.conf && \
+    echo "directory=/app" >> /etc/supervisor/supervisord.conf && \
+    echo "autostart=true" >> /etc/supervisor/supervisord.conf && \
+    echo "autorestart=true" >> /etc/supervisor/supervisord.conf && \
+    echo "stdout_logfile=/var/log/supervisor/worker.log" >> /etc/supervisor/supervisord.conf && \
+    echo "stderr_logfile=/var/log/supervisor/worker.err.log" >> /etc/supervisor/supervisord.conf
+
+EXPOSE 8090
+
+CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/supervisord.conf"]
