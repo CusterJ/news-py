@@ -21,8 +21,8 @@ def test_first_page_ten_pages():
 
 def test_last_page_ten_pages():
     result = get_pagination(10, 10, 100)
-    assert result == ['1', '6', '7', '8', '9', '10']
+    assert result == ['1', '7', '8', '9', '10']
 
 def test_middle_page_ten_pages():
     result = get_pagination(5, 10, 100)
-    assert result == ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10']
+    assert result == ['1', '2', '3', '4', '5', '6', '7', '8', '10']

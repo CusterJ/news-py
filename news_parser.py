@@ -18,13 +18,13 @@ class Parser:
     def __init__(self, mongo_repo, es_repo):
         self.mdb = mongo_repo
         self.es = es_repo
-        self.take_from_site: int = 3
+        self.take_from_site: int = 30
         self.parsed_arts: int = 0
         self.date_now: int = int(time.time()) 
         self.date_db: int = 0
         self.date_site: int = 0
         self.date_last_list_article: int = 0
-        self.no_arts_timedelta_weeks: float = 1
+        self.no_arts_timedelta_weeks: float = 4
         self.article_ids = [] 
         self.articles_list = []
 
@@ -40,12 +40,8 @@ class Parser:
     def start_parser(self):
         pass
     
-    def get_last_article_date_from_mongo(self) -> int:
-        # Get async func from sync
-        async def mdb_paginated_articles():
-            arts = await self.mdb.get_paginated_articles(skip=0, limit=1)
-            return arts
-        arts = asyncio.run(mdb_paginated_articles())
+    async def get_last_article_date_from_mongo(self) -> int:
+        arts = await self.mdb.get_paginated_articles(skip=0, limit=1)
 
         # try to get date from list
         try:
@@ -144,60 +140,49 @@ class Parser:
 
         return self._create_one_article_object(json.loads(result))
 
-    def save_article_list_to_dbs(self):
+    async def save_article_list_to_dbs(self):
         for art_id in self.article_ids:
             art = self._get_article_by_id_from_site(art_id)
             self.articles_list.append(art)
             # print(art.get("data").get("content").get("title").get("short"))
-            # result = self.mdb.save_one_article(art)
-
-        async def run_sync():
-            result = await self.mdb.bulk_write_articles(self.articles_list)
-            # result = await self.mdb.save_one_article(art)
-            # result = await self.mdb.get_server_info()
-            return result
-        result = asyncio.run(run_sync())
-        print(result)
-        # print(self.articles_list)
+        mongo_ok = await self.mdb.bulk_write_articles(self.articles_list)
+        es_ok = await self.es.bulk_write_articles(self.articles_list)
 
         # clear article_ids list and articles_list variables
         self.parsed_arts += len(self.articles_list)
+        print(mongo_ok, es_ok, self.parsed_arts)
         self.article_ids = []
         self.articles_list = []
 
 
-def main():
+async def main():
     # mongo connection
     mongo_conn = constants.MONGO
     client = motor.motor_asyncio.AsyncIOMotorClient(mongo_conn, serverSelectionTimeoutMS=5000)
-    # client = motor.MotorClient(mongo_conn, serverSelectionTimeoutMS=5000)
     mdb = MongoRepo(client)
 
     # elastic connection
     ES_URL = constants.ES_ARTS
     es = ElasticRepo(ES_URL)
+    await es.check_index()
 
     # init parser
     pr = Parser(mdb, es)
 
-    # TODO: rewrite this func
-    # why does this break the worker?
-    # pr.get_last_article_date_from_mongo()
-
     while True:
-        pr.get_last_article_date_from_mongo()
+        await pr.get_last_article_date_from_mongo()
         pr.get_last_article_date_from_site()
         print("mongo_date  = ", pr.date_db, datetime.fromtimestamp(pr.date_db))
         print("date_site   = ", pr.date_site, datetime.fromtimestamp(pr.date_site))
 
         if pr.date_db < pr.date_site:
             pr.get_articles_list_by_date_from_site()
-            pr.save_article_list_to_dbs()
+            await pr.save_article_list_to_dbs()
             time.sleep(1)
 
             while pr.date_db < pr.date_last_list_article:
                 pr.get_articles_list_by_date_from_site()
-                pr.save_article_list_to_dbs()
+                await pr.save_article_list_to_dbs()
                 time.sleep(1)
 
         print("date_last_list_article = ", pr.date_last_list_article, datetime.fromtimestamp(pr.date_last_list_article))
@@ -207,5 +192,4 @@ def main():
 
 
 if __name__ == "__main__":
-    # asyncio.run(main())
-    main()
+    asyncio.run(main())

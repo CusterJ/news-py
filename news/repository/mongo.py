@@ -65,27 +65,23 @@ class MongoRepo:
         print(result.raw_result)
         return True
 
-    def _create_dict_from_art_for_save_to_db(self, doc):
-        pass
-    
     async def bulk_write_articles(self, arts: list[Article]):
         requests = []
-        print("bulk_write_articles")
 
         for art in arts:
             requests.append(
-                UpdateOne(filter={'id': art.id}, update={'$set': art.to_dict}, upsert=True)
+                UpdateOne(filter={'id': art.id}, update={'$set': art._create_article_object_for_db()}, upsert=True)
             )
 
         try:
-            result = await self.articles.bulk_write(requests, ordered=False)
+            await self.articles.bulk_write(requests, ordered=False)
 
         except BulkWriteError as bwe:
-            pprint(bwe.details)
-            return result
+            pprint.pprint(bwe.details)
+            return False
 
-        pprint(result.bulk_api_result)
-        return result
+        # pprint.pprint(result.bulk_api_result)
+        return True
 
 
     async def get_server_info(self):

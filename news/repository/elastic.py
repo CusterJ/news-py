@@ -9,8 +9,6 @@ class ElasticRepo:
         self.url = url
         # self.http = clien -> httpclient.AsyncHTTPClient()
 
-    def _create_article_object_for_db(art: Article):
-        pass
 
     async def search(self, query: str, take: int, skip: int) -> dict:
         url = self.url + "_search"
@@ -94,9 +92,55 @@ class ElasticRepo:
             return False
         return True
     
+    async def bulk_write_articles(self, arts: list[Article]):
+        requests = ""
+        for art in arts:
+            # requests.join({ "index": { "_id": art.id }}, "\n")
+            # requests.join(str(art._create_article_object_for_db), "\n")
+            requests += json.dumps({ "index": { "_id": art.id }}) + "\n"
+            requests += json.dumps(art._create_article_object_for_db()) + "\n"
+
+        headers = {'Content-Type': 'application/json'}
+
+        http_req = httpclient.HTTPRequest(
+            url=self.url+"_bulk",
+            method="POST",
+            headers=headers,
+            body=requests,
+            )
+        
+        http_client = httpclient.AsyncHTTPClient()
+
+        try:
+            res = await http_client.fetch(http_req)
+        except Exception as exc:
+            print("ES bulk write err", exc)
+            return False
+        
+        return True
+
+    async def check_index(self):
+        es_url = self.url
+        headers = {'Content-Type': 'application/json'}
+
+        http_client = httpclient.AsyncHTTPClient()
+        try:
+            res = await http_client.fetch(es_url)
+        except Exception as exc:
+            print("check index error: ", exc)
+
+            # create index
+            ok = await self.create_index_and_mapping()
+            if ok:
+                return True
+            return False
+        
+        return True
 
     async def create_index_and_mapping(self):
         print("es create_index_and_mapping")
+        es_url = self.url
+        print(es_url)
 
         index = {
             "settings": {
@@ -163,8 +207,6 @@ class ElasticRepo:
             }
         }
 
-        es_url = self.url
-        print(es_url)
 
         headers = {'Content-Type': 'application/json'}
 
@@ -182,8 +224,8 @@ class ElasticRepo:
             sys.stderrr.write("Unable to connect to elastic:", e)
             return False
         
-        print("ES save one article status code: ", res.code)
-        # print(res.body)
+        print("ES create index status code: ", res.code)
+        print(res.body)
 
         if res.code != 200:
             return False
