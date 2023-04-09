@@ -2,3 +2,5 @@ motor
 tornado
 pymongo
 requests
+pytest
+pytest-asyncio

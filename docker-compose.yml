@@ -1,16 +1,28 @@
 version: '3'
 
 services:
-  backend: 
+  app: 
     build: ./
     restart: always
     ports:
-      - "8090:8090"
+      - "8888:8888"
     depends_on:
       - mongo
       - es01
     environment:
-      MONGO_URL: mongodb://mongo:27017/
+      APP: app.py
+
+  parser: 
+    build: ./
+    restart: always
+    # ports:
+    #   - "8090:8090"
+    depends_on:
+      - mongo
+      - es01
+    environment:
+      APP: news_parser.py
+      # PORT: 8090
 
   mongo:
     image: mongo
