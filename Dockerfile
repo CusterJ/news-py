@@ -1,17 +1,12 @@
-
-FROM python:alpine3.17
-
-ENV PYTHONUNBUFFERED 1
-
-WORKDIR /app
-
-EXPOSE 8888
-# EXPOSE $PORT
-
-COPY requirements.txt /app/requirements.txt
-
-RUN pip install --no-cache-dir -r /app/requirements.txt
+FROM python:slim-bullseye
 
 COPY . /app
 
-CMD ["python", "$APP"]
+RUN apt-get update && \
+    apt-get install -y supervisor && \
+    pip install -r /app/requirements.txt && \
+    mkdir -p /var/log/supervisor
+
+EXPOSE 8888
+
+CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/supervisord.conf"]
