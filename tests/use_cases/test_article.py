@@ -1,5 +1,5 @@
 import pytest
-from unittest.mock import Mock
+from unittest.mock import AsyncMock
 from news.responses import (
     ResponseSuccess,
     ResponseFailure,
@@ -11,7 +11,7 @@ from news.repository.mongo import MongoRepo
 
 @pytest.fixture
 def mock_repo():
-    repo = Mock()
+    repo = AsyncMock()
     return repo
 
 
@@ -20,8 +20,6 @@ async def test_article_count_use_case_valid(mock_repo):
     mock_repo.count_documents.return_value = 10
 
     response = await article_count_use_case(mock_repo)
-
-    yield
 
     print(response)
     assert bool(response) is True

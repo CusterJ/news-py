@@ -1,4 +1,3 @@
-import os
 import motor
 import constants
 import http.client
@@ -54,8 +53,9 @@ class Parser:
                 self.date_db = int(date_from.timestamp())
                 return
             else:
-                os._exit(1)
-
+                print("news_parser -> sleep 60 sec")
+                asyncio.sleep(60)
+                
         self.date_db = date # 1678050000
 
     def get_last_article_date_from_site(self):
@@ -169,6 +169,8 @@ async def main():
     # init parser
     pr = Parser(mdb, es)
 
+    asyncio.sleep(60)
+
     while True:
         await pr.get_last_article_date_from_mongo()
         pr.get_last_article_date_from_site()
@@ -178,17 +180,17 @@ async def main():
         if pr.date_db < pr.date_site:
             pr.get_articles_list_by_date_from_site()
             await pr.save_article_list_to_dbs()
-            time.sleep(1)
+            asyncio.sleep(1)
 
             while pr.date_db < pr.date_last_list_article:
                 pr.get_articles_list_by_date_from_site()
                 await pr.save_article_list_to_dbs()
-                time.sleep(1)
+                asyncio.sleep(1)
 
         print("date_last_list_article = ", pr.date_last_list_article, datetime.fromtimestamp(pr.date_last_list_article))
         print("mongo_date  = ", pr.date_db, datetime.fromtimestamp(pr.date_db))
         print("parsed_arts = ", pr.parsed_arts)
-        time.sleep(60)
+        asyncio.sleep(60)
 
 
 if __name__ == "__main__":
