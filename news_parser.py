@@ -5,7 +5,9 @@ import asyncio
 import json
 import time
 import motor.motor_asyncio
+import os
 
+from dotenv import load_dotenv
 from datetime import datetime, timedelta
 
 from news.repository.mongo import MongoRepo
@@ -54,7 +56,7 @@ class Parser:
                 return
             else:
                 print("news_parser -> sleep 60 sec")
-                asyncio.sleep(60)
+                await asyncio.sleep(60)
                 
         self.date_db = date # 1678050000
 
@@ -156,20 +158,23 @@ class Parser:
 
 
 async def main():
+    # load env vars
+    load_dotenv(".env")
+    MONGO_URL = os.getenv("MONGO_URL")
+    ES_URL = os.getenv("ES_URL")
+
     # mongo connection
-    mongo_conn = constants.MONGO
-    client = motor.motor_asyncio.AsyncIOMotorClient(mongo_conn, serverSelectionTimeoutMS=5000)
+    client = motor.motor_asyncio.AsyncIOMotorClient(MONGO_URL, serverSelectionTimeoutMS=5000)
     mdb = MongoRepo(client)
 
     # elastic connection
-    ES_URL = constants.ES_ARTS
     es = ElasticRepo(ES_URL)
     await es.check_index()
 
     # init parser
     pr = Parser(mdb, es)
 
-    asyncio.sleep(60)
+    await asyncio.sleep(60)
 
     while True:
         await pr.get_last_article_date_from_mongo()
@@ -180,17 +185,17 @@ async def main():
         if pr.date_db < pr.date_site:
             pr.get_articles_list_by_date_from_site()
             await pr.save_article_list_to_dbs()
-            asyncio.sleep(1)
+            await asyncio.sleep(1)
 
             while pr.date_db < pr.date_last_list_article:
                 pr.get_articles_list_by_date_from_site()
                 await pr.save_article_list_to_dbs()
-                asyncio.sleep(1)
+                await asyncio.sleep(1)
 
         print("date_last_list_article = ", pr.date_last_list_article, datetime.fromtimestamp(pr.date_last_list_article))
         print("mongo_date  = ", pr.date_db, datetime.fromtimestamp(pr.date_db))
         print("parsed_arts = ", pr.parsed_arts)
-        asyncio.sleep(60)
+        await asyncio.sleep(60)
 
 
 if __name__ == "__main__":

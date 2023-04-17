@@ -12,13 +12,9 @@ class ElasticRepo:
 
     async def search(self, query: str, take: int, skip: int) -> dict:
         url = self.url + "_search"
-        # TAKE = constants.ARTICLES_TAKE
-        # if page <=1:
-        #     skip = 0
-        # else:
-        #     skip = (page-1) * TAKE
 
-        print(f"search func -> es_url: {url}, TAKE = {take}, skip = {skip}")
+        # print(f"search func -> es_url: {url}, TAKE = {take}, skip = {skip}")
+
         data = {
             "size": take,
             "from": skip,
@@ -82,7 +78,8 @@ class ElasticRepo:
         try:
             res = await http_client.fetch(http_req)
         except Exception as e:
-            sys.stderrr.write("Unable to connect to elastic:", e)
+            # sys.stderrr.write("Unable to connect to elastic:", e)
+            print("Unable to connect to elastic:", e)
             return False
         
         print("ES save one article status code: ", res.code)
@@ -221,7 +218,8 @@ class ElasticRepo:
         try:
             res = await http_client.fetch(http_req)
         except Exception as e:
-            sys.stderrr.write("Unable to connect to elastic:", e)
+            print("Unable to connect to elastic:", e)
+            # sys.stderrr.write("Unable to connect to elastic:", e)
             return False
         
         print("ES create index status code: ", res.code)

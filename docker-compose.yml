@@ -1,28 +1,20 @@
 version: '3'
 
+# docker-compose up -d
+
 services:
   app: 
     build: ./
     restart: always
     ports:
       - "8888:8888"
+      - "9001:9001"
     depends_on:
       - mongo
       - es01
     environment:
-      APP: app.py
-
-  parser: 
-    build: ./
-    restart: always
-    # ports:
-    #   - "8090:8090"
-    depends_on:
-      - mongo
-      - es01
-    environment:
-      APP: news_parser.py
-      # PORT: 8090
+      MONGO_URL: mongodb://mongo:27017/
+      ES_URL: http://es01:9200/articles/
 
   mongo:
     image: mongo

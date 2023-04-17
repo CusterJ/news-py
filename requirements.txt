@@ -4,3 +4,4 @@ pymongo
 requests
 pytest
 pytest-asyncio
+python-dotenv

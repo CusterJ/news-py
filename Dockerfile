@@ -1,17 +1,15 @@
-FROM python:slim-bullseye
+FROM python:3.11.3-slim-bullseye
 
-RUN apt-get update && \
-    apt-get install -y supervisor && \
-    mkdir -p /var/log/supervisor
+RUN apt-get update && apt-get install -y supervisor
 
-# COPY requirements.txt /app
-COPY . /app
+COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 
-# RUN pip install --upgrade pip
+COPY requirements.txt /app/requirements.txt
 
 RUN pip install --no-cache-dir -r /app/requirements.txt
 
-EXPOSE 9001
-EXPOSE 8888
+COPY . /app
 
-CMD ["/usr/bin/supervisord", "-c", "/app/supervisord.conf"]
+EXPOSE 9001 8888
+
+CMD ["/usr/bin/supervisord"]

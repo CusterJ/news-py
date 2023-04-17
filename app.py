@@ -2,8 +2,8 @@ import asyncio
 import os
 import motor
 import tornado.web
-# import sys
-# sys.path.append('/home/max/Documents/Projects/news-py')
+
+from dotenv import load_dotenv
 
 import application.handlers.handlers as handlers
 import constants
@@ -26,15 +26,19 @@ def make_app():
 
 
 async def main():
+    # load env variables
+    load_dotenv(".env")
+    MONGO_URL = os.getenv("MONGO_URL")
+    ES_URL = os.getenv("ES_URL")
+
+    # make application
     app = make_app()
 
     # mongo connection
-    mongo_conn = "mongodb://localhost:27017/"
-    client = motor.motor_tornado.MotorClient(mongo_conn, serverSelectionTimeoutMS=5000)
+    client = motor.motor_tornado.MotorClient(MONGO_URL, serverSelectionTimeoutMS=5000)
     app.mongo_repo = MongoRepo(client)
 
     # elastic connection
-    ES_URL = constants.ES_ARTS
     app.elastic_repo = ElasticRepo(ES_URL)
 
     # start web
