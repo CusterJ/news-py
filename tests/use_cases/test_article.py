@@ -21,7 +21,6 @@ async def test_article_count_use_case_valid(mock_repo):
 
     response = await article_count_use_case(mock_repo)
 
-    print(response)
     assert bool(response) is True
     assert response.value == 10
 

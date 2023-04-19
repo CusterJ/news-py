@@ -1,5 +1,4 @@
 import motor
-import constants
 import http.client
 import asyncio
 import json
@@ -7,6 +6,7 @@ import time
 import motor.motor_asyncio
 import os
 
+from tornado.httpclient import AsyncHTTPClient
 from dotenv import load_dotenv
 from datetime import datetime, timedelta
 
@@ -168,13 +168,14 @@ async def main():
     mdb = MongoRepo(client)
 
     # elastic connection
-    es = ElasticRepo(ES_URL)
+    http_client = AsyncHTTPClient()
+    es = ElasticRepo(ES_URL, http_client)
     await es.check_index()
 
     # init parser
     pr = Parser(mdb, es)
 
-    await asyncio.sleep(60)
+    await asyncio.sleep(30)
 
     while True:
         await pr.get_last_article_date_from_mongo()
@@ -193,8 +194,8 @@ async def main():
                 await asyncio.sleep(1)
 
         print("date_last_list_article = ", pr.date_last_list_article, datetime.fromtimestamp(pr.date_last_list_article))
-        print("mongo_date  = ", pr.date_db, datetime.fromtimestamp(pr.date_db))
-        print("parsed_arts = ", pr.parsed_arts)
+        print("mongo_date             = ", pr.date_db, datetime.fromtimestamp(pr.date_db))
+        print("parsed_arts            = ", pr.parsed_arts)
         await asyncio.sleep(60)
 
 

@@ -33,7 +33,6 @@ class MongoRepo:
     async def get_paginated_articles(self, skip: int, limit: int) -> list[Article]:
         arts = await self.articles.find({}).sort('dates.posted', -1).skip(skip).limit(limit).to_list(None)
         
-        # return []
         return self._create_article_objects(arts)
     
 
@@ -49,7 +48,6 @@ class MongoRepo:
     async def count_documents(self) -> int:
         try:
             n = await self.articles.count_documents({})
-            print('%s documents in collection' % n)
         except Exception:
             print("Unable to connect to the mongo.")
         return n
@@ -82,19 +80,3 @@ class MongoRepo:
 
         # pprint.pprint(result.bulk_api_result)
         return True
-
-
-    async def get_server_info(self):
-        try:
-            print(self.client.get_server_info)
-        except Exception as e:
-            print("Unable to connect to the server.", e)
-
-
-    def save_one_article(self, art: Article):
-        try:
-            result = self.articles.insert_one(art.to_dict())
-            print('result %s' % repr(result.inserted_id))
-            return result
-        except Exception as e:
-            print("save_one_article", e)

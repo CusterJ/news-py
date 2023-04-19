@@ -3,10 +3,10 @@ import os
 import motor
 import tornado.web
 
+from tornado.httpclient import AsyncHTTPClient
 from dotenv import load_dotenv
 
 import application.handlers.handlers as handlers
-import constants
 from news.repository.mongo import MongoRepo
 from news.repository.elastic import ElasticRepo
 
@@ -39,7 +39,8 @@ async def main():
     app.mongo_repo = MongoRepo(client)
 
     # elastic connection
-    app.elastic_repo = ElasticRepo(ES_URL)
+    http_client = AsyncHTTPClient()
+    app.elastic_repo = ElasticRepo(ES_URL, http_client)
 
     # start web
     app.listen(8888)
