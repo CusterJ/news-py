@@ -29,16 +29,8 @@ class ElasticRepo:
         }
 
         headers = {'Content-Type': 'application/json'}
-
-        http_req = HTTPRequest(
-            url=url,
-            method="GET",
-            headers=headers,
-            body=json.dumps(data),
-            allow_nonstandard_methods=True,
-            )
         
-        res = await self.http.fetch(http_req)
+        res = await self.http.fetch(url, method="POST", headers=headers, body=json.dumps(data))
 
         # print(res.code)
         return json.loads(res.body)
@@ -102,18 +94,21 @@ class ElasticRepo:
             print("ES bulk write err", exc)
             return False
         
+        if res.code != 200:
+            return False
+        
         return True
 
     async def check_index(self):
         es_url = self.url
-        # headers = {'Content-Type': 'application/json'}
-
-        # http_client = httpclient.AsyncHTTPClient()
+        
         try:
             res = await self.http.fetch(es_url)
         except Exception as exc:
             print("check index error: ", exc)
+            return False
 
+        if res.code != 200:
             # create index
             ok = await self.create_index_and_mapping()
             if ok:
@@ -208,9 +203,6 @@ class ElasticRepo:
             print("Unable to connect to elastic:", e)
             return False
         
-        print("ES create index status code: ", res.code)
-        print(res.body)
-
         if res.code != 200:
             return False
         return True
